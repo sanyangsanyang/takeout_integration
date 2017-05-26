@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="takeout_integration:war">
+    <output-path>$PROJECT_DIR$/target</output-path>
+    <root id="archive" name="takeout_integration.war">
+      <element id="artifact" artifact-name="takeout_integration:war exploded" />
+    </root>
+  </artifact>
+</component>
