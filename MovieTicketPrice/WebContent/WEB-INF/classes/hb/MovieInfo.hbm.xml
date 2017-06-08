@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+<class name="nju.model.MovieInfo" table="movie_info">
+	<id name="movie_id" column="movie_id" type="java.lang.Integer">
+		<generator class="identity"/>
+	</id>
+	<property name="movie_name" column="movie_name" type="java.lang.String"/>
+	<property name="info" column="info" type="java.lang.String"/>
+	<property name="img_path" column="img_path" type="java.lang.String"/>
+	<set name="infos">
+		<key column="movie_id"></key>
+		<one-to-many class="nju.model.PlatformInfo"/>
+	</set>
+</class>
+</hibernate-mapping>

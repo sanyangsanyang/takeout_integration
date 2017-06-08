@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+<class name="nju.model.CinemaInfo" table="cinema_info">
+	<id name="cinema_id" column="cinema_id" type="java.lang.Integer">
+		<generator class="identity"/>
+	</id>
+	<property name="address" column="address" type="java.lang.String"/>
+	<property name="cinema_name" column="cinema_name" type="java.lang.String"/>
+	<set name="infos">
+		<key column="cinema_id"></key>
+		<one-to-many class="nju.model.PlatformInfo"/>
+	</set>
+</class>
+</hibernate-mapping>
