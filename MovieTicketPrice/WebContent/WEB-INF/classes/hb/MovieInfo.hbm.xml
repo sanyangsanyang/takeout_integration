@@ -8,8 +8,12 @@
 		<generator class="identity"/>
 	</id>
 	<property name="movie_name" column="movie_name" type="java.lang.String"/>
-	<property name="info" column="info" type="java.lang.String"/>
-	<property name="img_path" column="img_path" type="java.lang.String"/>
+	<property name="img_url" column="img_url" type="java.lang.String"/>
+	<property name="platform" column="platform" type="java.lang.Enum"/>
+	<property name="country" column="country" type="java.lang.String"/>
+	<property name="duration" column="duration" type="java.lang.String"/>
+	<property name="score" column="score" type="java.lang.String"/>
+	<property name="tag" column="tag" type="java.lang.String"/>
 	<set name="infos">
 		<key column="movie_id"></key>
 		<one-to-many class="nju.model.PlatformInfo"/>

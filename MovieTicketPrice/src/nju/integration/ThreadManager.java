@@ -1,12 +1,5 @@
 package nju.integration;
 
-import java.util.ArrayList;
-
-import nju.crawler.CrawlerManager;
-import nju.vo.HtmlData;
-import nju.vo.IntegrationData;
-import nju.vo.XmlData;
-
 public class ThreadManager extends Thread {
 	private static boolean isRunning;
 
@@ -25,7 +18,7 @@ public class ThreadManager extends Thread {
 			// 爬一次数据
 			execute();
 			try {
-				Thread.sleep(3600000); // 每隔一小时执行一次
+				Thread.sleep(3600000); // 每隔半个时执行一次
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -37,27 +30,25 @@ public class ThreadManager extends Thread {
 	}
 	
 	private void execute() {
+//		ComponentFactory.getCrawlerLog().log("开始爬取数据.");
+//		
+//		//开始爬数据并存到文件里，爬好后返回
+//		ComponentFactory.getCrawlerManager().getNewData();
 		
-		ComponentFactory.getCrawlerLog().log("开始爬取数据.");
+		//验证数据格式，如果错了就报告，错的那个文件删除
+		if(ComponentFactory.getXmlSchemaManager().validate()) {
+			System.out.println("xml文件验证成功，将数据写入数据库中");
+			
+			//存放数据到数据库中
+			ComponentFactory.getDataIntegrator().integrator();
 		
-		//调用HtmlTranslatro将html界面转换为标准的xml格式
-		ArrayList<XmlData> xmlData = ComponentFactory.getCrawlerManager().getNewData();
-		
-		//调用XstlTranslatro从xml中抽取出有用的数据，依然为xml格式
-		ArrayList<IntegrationData> integrationData = ComponentFactory.getXsltTranslatro().translate(xmlData);
-		
-		//验证数据
-		ArrayList<IntegrationData> validatedData = ComponentFactory.getXmlSchemaManager().validate(integrationData);
-		
-		//存放数据
-		boolean result = ComponentFactory.getDataIntegrator().integrator(validatedData);
-		
-		//写入更新结果
-		if(result) {
-			ComponentFactory.getCrawlerLog().log("更新成功.");
+			System.out.println("电影数据成功更新！下一次更新将在半小时内开始");
 		} else {
-			ComponentFactory.getCrawlerLog().log("更新失败。");
+			System.out.println("xml文件验证失败，请检查log");
 		}
 		
+
 	}
+	
+
 }

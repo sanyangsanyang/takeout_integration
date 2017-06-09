@@ -7,10 +7,9 @@
 	<id name="id" column="id" type="java.lang.Integer">
 		<generator class="identity"/>
 	</id>
-	<property name="price" column="price" type="java.lang.Double"/>
+	<property name="price" column="price" type="java.lang.String"/>
 	<property name="date" column="date" type="java.sql.Date"/>
 	<property name="platform" column="platform" type="java.lang.Enum"/>
-	<property name="grade" column="grade" type="java.lang.String"/>
 	<many-to-one name="movie_info" class="nju.model.MovieInfo">
 		<column name="movie_id"></column>
 	</many-to-one>

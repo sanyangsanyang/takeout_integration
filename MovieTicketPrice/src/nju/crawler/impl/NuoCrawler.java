@@ -1,9 +1,9 @@
 package nju.crawler.impl;
 
-import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -17,28 +17,37 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 
 import nju.crawler.Crawler;
-import nju.crawler.CrawlerManager;
-import nju.crawler.tool.ImgGetter;
 import nju.type.Platform;
-import nju.type.XmlType;
-import nju.vo.XmlData;
 
 public class NuoCrawler extends Crawler {
 
 	// 南京电影票
 	private static String MAIN_URL = "https://dianying.nuomi.com/movie/movielist?cityId=315";
-
-	private CrawlerManager manager;
 	private ChromeDriver dr;
+	private Document movie_doc;
+	private Element movies;
+	
+	private Document cinema_doc;
+	private Element cinemas;
+	
+	private Document platform_doc;
+	private Element platform_infos;
 
 	public NuoCrawler() {
 		super();
+		movies = new Element("movies");
+	    movie_doc = new Document(movies);
+	    
+	    cinemas = new Element("cinemas");
+	    cinema_doc = new Document(cinemas);
+	    
+	    platform_infos = new Element("platform_infos");
+	    platform_doc = new Document(platform_infos);
 	}
 
 	@Override
-	public void start(CrawlerManager manager) {
+	public void start() {
 		// TODO Auto-generated method stub
-		this.manager = manager;
 		try {
 			// 位置，主界面，电影列表，有翻页，用循环处理翻页
 			dr = new ChromeDriver();
@@ -81,6 +90,9 @@ public class NuoCrawler extends Crawler {
 		}
 
 		finished = true;
+		
+		saveXml();
+		
 	}
 
 	// 查询一页的电影信息
@@ -99,8 +111,7 @@ public class NuoCrawler extends Crawler {
 			try {
 				String name = film_tag.findElement(By.xpath("div[1]/div/p[1]")).getText().split(" ")[0];
 				String img_src = film_tag.findElement(By.xpath("div[1]/a/img")).getAttribute("src");
-				String path = "nuomi_img\\" + name + ".jpg";
-				ImgGetter.get(img_src, path);
+
 				String tag = film_tag.findElement(By.xpath("div[1]/div/ul/li[1]")).getText().substring(3)
 						.replaceAll(",", "/");
 				String duration = film_tag.findElement(By.xpath("div[1]/div/ul/li[2]")).getText().substring(3);
@@ -119,11 +130,18 @@ public class NuoCrawler extends Crawler {
 				String site = movie_dr.findElement(By.xpath("//*[@id='detailIntro']/div/div[2]/div[2]/p[3]")).getText()
 						.split("\\|")[0].trim();
 				String info = tag + "-" + site + "-" + duration;
-				save_movie_info(name, info, path);
+				String score = movie_dr.findElement(By.xpath("//*[@id='detailIntro']/div/div[2]/div[1]/span")).getText();
+				save_movie_info(name, info, score, img_src);
 
 				viewCinema(movie_dr, name);
 			} catch (Exception e) {
 				e.printStackTrace();
+				try {
+					Thread.sleep(10000000);
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				continue;
 			}
 		}
@@ -137,7 +155,7 @@ public class NuoCrawler extends Crawler {
 		// movie_dr不用关
 		// 3个日期的界面
 
-		String score = movie_dr.findElement(By.xpath("//*[@id='detailIntro']/div/div[2]/div[1]/span")).getText();
+		
 
 		List<WebElement> data_tags = movie_dr.findElements(By.xpath("//*[@id='dateList']/li"));
 		int size = data_tags.size() >= 3 ? 3 : data_tags.size();
@@ -145,12 +163,12 @@ public class NuoCrawler extends Crawler {
 			WebElement date_tag = movie_dr.findElement(By.xpath("//*[@id='dateList']/li[" + i + "]/span"));
 			date_tag.click();
 			String date_str = date_tag.getText();
-			viewData(movie_dr, movie_name, score, date_str);
+			viewData(movie_dr, movie_name,  date_str);
 		}
 
 	}
 
-	private void viewData(ChromeDriver movie_dr, String movie_name, String score, String date_str) {
+	private void viewData(ChromeDriver movie_dr, String movie_name, String date_str) {
 		// 每个当前界面保存电影院和电影信息
 		// 点开下拉框知道没有新的电影院信息了
 		try {
@@ -189,44 +207,54 @@ public class NuoCrawler extends Crawler {
 			save_cinema_info(cinema_name, cinema_address);
 			
 			// 平台价格
-			String price = info_tag.findElement(By.xpath("div[3]/p/em[2]")).getText();
+			String price = "0";
+			try{
+				price = info_tag.findElement(By.xpath("div[3]/p/em[2]")).getText();
+			} catch(Exception e) {
+				continue;
+			}
 			
-			save_platform_info(movie_name, cinema_name, date, score, price);
+			save_platform_info(movie_name, cinema_name, date,  price);
 		}
 	}
 
 	// 保存电影信息xml
-	private void save_movie_info(String name, String info, String path) {
+	private void save_movie_info(String name, String info,String score, String path) {
+		
 		Element movie_root = new Element("movie");
-		Document movie_doc = new Document(movie_root);
+
 		Element name_ele = new Element("movie_name");
-		Element info_ele = new Element("movie_info");
+		Element tag_ele = new Element("tag");
+		Element site_ele = new Element("country");
+		Element score_ele = new Element("score");
+		Element duration_ele = new Element("duration");
 		Element path_ele = new Element("movie_img");
-
+		Element platform_ele = new Element("platform");
+		
 		name_ele.addContent(name);
-		info_ele.addContent(info);
+		
+		String[] infos = info.split("-");
+		tag_ele.addContent(infos[0]);
+		site_ele.addContent(infos[1]);
+		duration_ele.addContent(infos[2]);
+		score_ele.addContent(score);
 		path_ele.addContent(path);
-
+		platform_ele.addContent(Platform.MAO_YAN.ordinal() + "");
+		
 		movie_root.addContent(name_ele);
-		movie_root.addContent(info_ele);
+		movie_root.addContent(tag_ele);
+		movie_root.addContent(site_ele);
+		movie_root.addContent(duration_ele);
+		movie_root.addContent(score_ele);
 		movie_root.addContent(path_ele);
-
-		XMLOutputter output = new XMLOutputter(Format.getPrettyFormat());
-		ByteArrayOutputStream s = new ByteArrayOutputStream();
-		try {
-			output.output(movie_doc, s);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		String movie_xml = new String(s.toByteArray());
-		manager.add(new XmlData(XmlType.MOVIE, movie_xml));
-		System.out.println(movie_xml);
+		movie_root.addContent(platform_ele);	
+		
+		movies.addContent(movie_root);
+		System.out.println("糯米网:" + name + " 信息开始爬取。");
 	}
 
 	private void save_cinema_info(String cinema_name, String cinema_address) {
 		Element cinema = new Element("cinema");
-		Document cinema_doc = new Document(cinema);
 
 		Element cinema_name_tag = new Element("cinema_name");
 		Element cinema_address_tag = new Element("cinema_address");
@@ -237,63 +265,36 @@ public class NuoCrawler extends Crawler {
 		cinema.addContent(cinema_name_tag);
 		cinema.addContent(cinema_address_tag);
 
-		XMLOutputter output = new XMLOutputter(Format.getPrettyFormat());
-		ByteArrayOutputStream s = new ByteArrayOutputStream();
-		try {
-			output.output(cinema_doc, s);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		String cinema_xml = new String(s.toByteArray());
-
-		manager.add(new XmlData(XmlType.CINEMA, cinema_xml));
-		System.out.println(cinema_xml);
+		cinemas.addContent(cinema);
 	}
 
-	private void save_platform_info(String movie_name, String cinema_name, String date, String movie_score, String price_msg_str) {
+	private void save_platform_info(String movie_name, String cinema_name, String date, String price_msg_str) {
 		Element platform_info = new Element("platform_info");
-		Document platform_doc = new Document(platform_info);
 		
 		Element movie_name1 = new Element("movie_name");
 		Element cinema_name1 = new Element("cinema_name");
 		Element date_tag = new Element("date");
-		Element score_tag = new Element("score");
 		Element price_tag = new Element("price");
 		Element platform_tag = new Element("platform");
 		
 		movie_name1.addContent(movie_name);
 		cinema_name1.addContent("cinema_name");
 		date_tag.addContent(date);
-		score_tag.addContent(movie_score);
 		price_tag.addContent(price_msg_str);
 		platform_tag.addContent(Platform.MAO_YAN.ordinal() + "");
 		
 		platform_info.addContent(movie_name1);
 		platform_info.addContent(cinema_name1);
 		platform_info.addContent(date_tag);
-		platform_info.addContent(score_tag);
 		platform_info.addContent(price_tag);
 		platform_info.addContent(platform_tag);
 		
-		XMLOutputter output = new XMLOutputter(Format.getPrettyFormat());
-		ByteArrayOutputStream s = new ByteArrayOutputStream();
-		try {
-			output.output(platform_doc, s);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		String platform_xml = new String(s.toByteArray());
-		
-		/*********************************************/
-		manager.add(new XmlData(XmlType.PLATFORM, platform_xml));
-		System.out.println(platform_xml);
+		platform_infos.addContent(platform_info);
 	}
 	
 	private String translateDateStr(String dateStr) {
-		String[] dates = dateStr.replace('月', ' ').replace('日', ' ').split(" ");
-		String month = dates[0].substring(2);
+		String[] dates = dateStr.trim().substring(2).replace('月', ' ').replace('日', ' ').split(" ");
+		String month = dates[0];
 		String day = dates[1];
 		
 		if(month.length() == 1) {
@@ -307,9 +308,65 @@ public class NuoCrawler extends Crawler {
 		return "2017-" + month + "-" + day;
 	}
 	
+	private void saveXml() {
+		String movieXmlPath = "D:\\workspace\\xmls\\nuomi\\nuomi_movie.xml";
+		String cinemaXmlPath = "D:\\workspace\\xmls\\nuomi\\nuomi_cinema.xml";
+		String platformXmlPath = "D:\\workspace\\xmls\\nuomi\\nuomi_buyinfo.xml";
+		//电影
+		{
+			Format format = Format.getPrettyFormat();
+			// 设置xml的编码
+			format.setEncoding("utf-8");
+			XMLOutputter out = new XMLOutputter(format);
+			try {
+				out.output(movie_doc, new FileOutputStream(new File(movieXmlPath)));
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		//电影院
+		{
+			Format format = Format.getPrettyFormat();
+			// 设置xml的编码
+			format.setEncoding("utf-8");
+			XMLOutputter out = new XMLOutputter(format);
+			try {
+				out.output(cinema_doc, new FileOutputStream(new File(cinemaXmlPath)));
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		
+		//平台信息
+		{
+			Format format = Format.getPrettyFormat();
+			// 设置xml的编码
+			format.setEncoding("utf-8");
+			XMLOutputter out = new XMLOutputter(format);
+			try {
+				out.output(platform_doc, new FileOutputStream(new File(platformXmlPath)));
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
 
 	public static void main(String[] args) {
-		(new NuoCrawler()).start(new CrawlerManager());
+		(new NuoCrawler()).start();
 	}
 
 }

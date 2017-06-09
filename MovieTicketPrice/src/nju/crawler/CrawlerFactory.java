@@ -23,7 +23,7 @@ public class CrawlerFactory {
 		return null;
 	}
 	
-	public static boolean finish() {
+	public static boolean finished() {
 		boolean result = true;
 		for(int i = 0; i < NUM_OF_TARGET; i++) {
 			result = result && crawlers[i].finished;

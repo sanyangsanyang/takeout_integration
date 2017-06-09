@@ -11,14 +11,14 @@ public abstract class Crawler {
 		finished = false;
 	}
 
-	public void crawling(CrawlerManager manager) {
+	public void crawling() {
 		// TODO Auto-generated method stub
 		(new Thread(new Runnable() {
 			public void run() {
-				start(manager);
+				start();
 			}
 		})).start();
 	}
 	
-	public abstract void start(CrawlerManager manager);
+	public abstract void start();
 }

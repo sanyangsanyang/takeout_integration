@@ -18,7 +18,11 @@
 		for this bean go here </bean> more bean definitions go here -->
 		
 <!-- 记得action要到这里来注册 -->
-	<bean id="TestAction" class="nju.action.TestAction"></bean>
+	<bean id="FilmAction" class="nju.action.FilmAction"></bean>
+	<bean id="PriceAction" class="nju.action.PriceAction"></bean>
+	
+	<bean id="saveDao" class="nju.dao.impl.SaveDaoImpl"></bean>
+	<bean class="nju.integration.MyApplicationContextUtil"></bean>
 	
 	<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
 		<property name="driverClassName" value="com.mysql.jdbc.Driver" />

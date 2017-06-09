@@ -8,11 +8,10 @@ import nju.type.Platform;
 public class PlatformInfo {
 
 	private int id;
-	private double price;
+	private String price;
 	private Date date;
 
 	private Platform platform;
-	private String grade;
 	private MovieInfo movie_info;
 	private CinemaInfo cinema_info;
 	
@@ -34,10 +33,10 @@ public class PlatformInfo {
 	public void setId(int id) {
 		this.id = id;
 	}
-	public double getPrice() {
+	public String getPrice() {
 		return price;
 	}
-	public void setPrice(double price) {
+	public void setPrice(String price) {
 		this.price = price;
 	}
 	public Date getDate() {
@@ -51,12 +50,6 @@ public class PlatformInfo {
 	}
 	public void setPlatform(Platform platform) {
 		this.platform = platform;
-	}
-	public String getGrade() {
-		return grade;
-	}
-	public void setGrade(String grade) {
-		this.grade = grade;
 	}
 
 }

@@ -7,11 +7,12 @@
 	<constant name="struts.devMode" value="true" /> 
 	<constant name="struts.enable.DynamicMethodInvocation" value="true"></constant>
 <!-- 记得写完aciton来改 -->
-	<package name="struts2" namespace="/Test" extends="struts-default">
-		<action name="test" class="TestAction">
-			<result name="success">/jspFiles/test.jsp</result>
+	<package name="struts2" namespace="/Film" extends="struts-default">
+		<action name="search" class="FilmAction">
+		</action>
+		<action name="priceinfo" class="PriceAction">
 		</action>
 	</package>
-	
+
 </struts>
 

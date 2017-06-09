@@ -4,8 +4,8 @@ import nju.type.XmlType;
 
 public class XmlData {
 	
-	private XmlType type;
-	private String xmlData;
+	protected XmlType type;
+	protected String xmlData;
 	
 	public XmlData() {
 		

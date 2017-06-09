@@ -5,7 +5,6 @@ import nju.crawler.CrawlerManager;
 public class ComponentFactory {
 
 	private static CrawlerManager crawlerManager;
-	private static XsltTranslator xsltTranslatro;
 	private static XmlSchemaManager xmlSchemaManager;
 	private static DataIntegrator dataIntegrator;
 	private static WorkLog crawlerLog;
@@ -18,14 +17,6 @@ public class ComponentFactory {
 		return crawlerManager;
 	}
 	
-	public static XsltTranslator getXsltTranslatro() {
-		
-		if(xsltTranslatro == null) {
-			xsltTranslatro = new XsltTranslator();
-		}
-		
-		return xsltTranslatro;
-	}
 
 	public static XmlSchemaManager getXmlSchemaManager() {
 		

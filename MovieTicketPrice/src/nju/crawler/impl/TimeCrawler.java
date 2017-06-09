@@ -9,8 +9,8 @@ public class TimeCrawler extends Crawler{
 	}
 	
 	@Override
-	public void start(CrawlerManager manager) {
-		
+	public void start() {
+		finished = true;
 	}
 
 }

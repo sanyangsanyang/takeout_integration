@@ -1,5 +1,5 @@
 package nju.vo;
 
-public class IntegrationData {
-
+public class IntegrationData extends XmlData{
+	
 }

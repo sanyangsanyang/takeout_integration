@@ -1,6 +1,10 @@
 package nju.crawler.impl;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -29,13 +33,28 @@ import nju.vo.XmlData;
 
 public class MaoCrawler extends Crawler {
 	private static String MAIN_URL = "http://www.meituan.com/dianying/zuixindianying";
-
+	private Document movie_doc;
+	private Element movies;
+	
+	private Document cinema_doc;
+	private Element cinemas_ele;
+	
+	private Document platform_doc;
+	private Element platform_infos;
 	public MaoCrawler() {
 		super();
+		movies = new Element("movies");
+	    movie_doc = new Document(movies);
+	    
+	    cinemas_ele = new Element("cinemas");
+	    cinema_doc = new Document(cinemas_ele);
+	    
+	    platform_infos = new Element("platform_infos");
+	    platform_doc = new Document(platform_infos);
 	}
 
 	@Override
-	public void start(CrawlerManager manager) {
+	public void start() {
 		ChromeDriver dr = new ChromeDriver();
 		dr.manage().timeouts().implicitlyWait(3, TimeUnit.SECONDS);
 		dr.get(MAIN_URL);
@@ -44,14 +63,11 @@ public class MaoCrawler extends Crawler {
 		WebElement eleRoot = dr.findElement(By.xpath("//*[@id='content']/div"));
 		List<WebElement> eles = eleRoot.findElements(By.className("movie-cell"));
 
+
 		for (WebElement ele : eles) {
+
 			WebElement ele2 = ele.findElement(By.xpath("div/a"));
-
-			// 网页url，对应该电影的所有信息
-			String url = ele2.getAttribute("href");
-			
-
-			
+	
 			ele2.click();
 
 			Set<String> handles = dr.getWindowHandles();
@@ -147,9 +163,8 @@ public class MaoCrawler extends Crawler {
 							
 							//获取图片并保存本地路径
 							String img_url = movie_info.findElement(By.xpath("div[2]/div[1]/div[1]/img")).getAttribute("src");
-							String path = "maoyan_img\\" + name + ".jpg";
 							
-							ImgGetter.get(img_url, path);
+
 							
 							//生成xmldata
 							
@@ -157,28 +172,35 @@ public class MaoCrawler extends Crawler {
 //									+ "info:" + info + "\n"
 //											+ "path:" + path + "\n\n");
 							Element movie_root = new Element("movie");
-							Document movie_doc = new Document(movie_root);
 							
 							Element name_ele = new Element("movie_name");
-							Element info_ele = new Element("movie_info");
+							Element tag_ele = new Element("tag");
+							Element site_ele = new Element("country");
+							Element duration_ele = new Element("duration");
+							Element score_ele = new Element("score");
 							Element path_ele = new Element("movie_img");
+							Element platform_ele = new Element("platform");
+							
 							
 							name_ele.addContent(name);
-							info_ele.addContent(info);
-							path_ele.addContent(path);
-							
+							String[] infos = info.split("-");
+							tag_ele.addContent(infos[0]);
+							site_ele.addContent(infos[1]);
+							duration_ele.addContent(infos[2]);
+							score_ele.addContent(score);
+							path_ele.addContent(img_url);
+							platform_ele.addContent(Platform.MAO_YAN.ordinal() + "");
+
 							movie_root.addContent(name_ele);
-							movie_root.addContent(info_ele);
+							movie_root.addContent(tag_ele);
+							movie_root.addContent(site_ele);
+							movie_root.addContent(duration_ele);
+							movie_root.addContent(score_ele);
 							movie_root.addContent(path_ele);
+							movie_root.addContent(platform_ele);
 							
-							XMLOutputter output = new XMLOutputter(Format.getPrettyFormat());
-							ByteArrayOutputStream s = new ByteArrayOutputStream();
-							output.output(movie_doc, s);
-							String movie_xml = new String(s.toByteArray());
-							
-							/**************************************/
-							manager.add(new XmlData(XmlType.MOVIE, movie_xml));
-							System.out.println(movie_xml);
+							movies.addContent(movie_root);
+							System.out.println("猫眼网:" + name + " 信息开始爬取。");
 						}
 						
 						//每个界面爬 电影院信息和详细信息(n个),价格信息(n个)保存为xml格式
@@ -196,7 +218,6 @@ public class MaoCrawler extends Crawler {
 //									+ "address:" + cinema_address + "\n\n");
 							
 							Element cinema = new Element("cinema");
-							Document cinema_doc = new Document(cinema);
 							
 							Element cinema_name_tag = new Element("cinema_name");
 							Element cinema_address_tag = new Element("cinema_address");
@@ -207,18 +228,9 @@ public class MaoCrawler extends Crawler {
 							cinema.addContent(cinema_name_tag);
 							cinema.addContent(cinema_address_tag);
 							
-							XMLOutputter output = new XMLOutputter(Format.getPrettyFormat());
-							ByteArrayOutputStream s = new ByteArrayOutputStream();
-							output.output(cinema_doc, s);
-							String cinema_xml = new String(s.toByteArray());
-							
-							/*************************************/
-							manager.add(new XmlData(XmlType.CINEMA, cinema_xml));
-							System.out.println(cinema_xml);
+							cinemas_ele.addContent(cinema);
 							
 							String movie_name = name;
-							String movie_score = score;
-							Platform pf = Platform.MAO_YAN;
 							SimpleDateFormat sdf = new SimpleDateFormat("yyyy-mm-dd");
 							Date date = new Date(sdf.parse(cur_data).getTime());
 							
@@ -268,42 +280,32 @@ public class MaoCrawler extends Crawler {
 								// + "price:" + price_msg_str + "\n\n");
 							
 								Element platform_info = new Element("platform_info");
-								Document platform_doc = new Document(platform_info);
 								
 								Element movie_name1 = new Element("movie_name");
 								Element cinema_name1 = new Element("cinema_name");
 								Element date_tag = new Element("date");
-								Element score_tag = new Element("score");
 								Element price_tag = new Element("price");
 								Element platform_tag = new Element("platform");
 								
 								movie_name1.addContent(movie_name);
 								cinema_name1.addContent(cinema_name);
 								date_tag.addContent((new SimpleDateFormat("yyyy-MM-dd")).format(date));
-								score_tag.addContent(movie_score);
 								price_tag.addContent(price_msg_str);
 								platform_tag.addContent(Platform.MAO_YAN.ordinal() + "");
 								
 								platform_info.addContent(movie_name1);
 								platform_info.addContent(cinema_name1);
 								platform_info.addContent(date_tag);
-								platform_info.addContent(score_tag);
 								platform_info.addContent(price_tag);
 								platform_info.addContent(platform_tag);
 								
-								XMLOutputter output1 = new XMLOutputter(Format.getPrettyFormat());
-								ByteArrayOutputStream s1 = new ByteArrayOutputStream();
-								output1.output(platform_doc, s1);
-								String platform_xml1 = new String(s1.toByteArray());
-								
-								/*********************************************/
-								manager.add(new XmlData(XmlType.PLATFORM, platform_xml1));
-								System.out.println(platform_xml1);
+								platform_infos.addContent(platform_info);
 							}
 							
 						} catch (Exception e) {
-							Thread.sleep(100000);
+
 							e.printStackTrace();
+							Thread.sleep(100000);
 							continue;
 						}
 					}				
@@ -325,9 +327,66 @@ public class MaoCrawler extends Crawler {
 		dr.close();
 		dr.quit();
 		finished = true;
+		
+		saveXml();
+	}
+	private void saveXml() {
+		String movieXmlPath = "D:\\workspace\\xmls\\maoyan\\maoyan_movie.xml";
+		String cinemaXmlPath = "D:\\workspace\\xmls\\maoyan\\maoyan_cinema.xml";
+		String platformXmlPath = "D:\\workspace\\xmls\\maoyan\\maoyan_buyinfo.xml";
+		//电影
+		{
+			Format format = Format.getPrettyFormat();
+			// 设置xml的编码
+			format.setEncoding("utf-8");
+			XMLOutputter out = new XMLOutputter(format);
+			try {
+				out.output(movie_doc, new FileOutputStream(new File(movieXmlPath)));
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		//电影院
+		{
+			Format format = Format.getPrettyFormat();
+			// 设置xml的编码
+			format.setEncoding("utf-8");
+			XMLOutputter out = new XMLOutputter(format);
+			try {
+				out.output(cinema_doc, new FileOutputStream(new File(cinemaXmlPath)));
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		
+		//平台信息
+		{
+			Format format = Format.getPrettyFormat();
+			// 设置xml的编码
+			format.setEncoding("utf-8");
+			XMLOutputter out = new XMLOutputter(format);
+			try {
+				out.output(platform_doc, new FileOutputStream(new File(platformXmlPath)));
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public static void main(String[] args) {
-		(new MaoCrawler()).start(new CrawlerManager());
+		(new MaoCrawler()).start();
 	}
 }
