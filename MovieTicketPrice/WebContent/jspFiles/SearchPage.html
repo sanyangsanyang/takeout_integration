@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Doge电影比价</title>
+    <link href="Search.css" rel="stylesheet" type="text/css">
+    <script language="JavaScript" type="text/javascript">
+        function test(){
+        	var arr=["222","333","3333","1212"];
+        	for(var a in arr){
+                var li = document.createElement('li');
+                li.innerHTML="<a href='http://www.baidu.com'"+""+">"+arr[a]+"</a>";
+                document.getElementById("filmreport").appendChild(li);
+            }
+        }
+        function addfilm(){
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.onreadystatechange=function()
+        	{
+        		if (xmlhttp.readyState==4 && xmlhttp.status==200)
+        		{
+        			var arr=eval(xmlhttp.responseText);
+                    for(var a in arr){
+                        var li = document.createElement('li');
+                        li.innerHTML="<a href=''>"+arr[a]+"</a>";
+                        document.getElementById("filmreport").appendChild(li);
+                    }
+        		}
+        	}
+            var arr=xmlhttp.open("GET","http://localhost:8080/MovieTicketPrice/Film/search?type=hotfilm",true);
+            xmlhttp.send();   
+            
+        }
+        function searchfilm(){
+            var elem = document.getElementById("filmreport");
+           while(elem.hasChildNodes()) //当elem下还存在子节点时 循环继续
+           {
+                elem.removeChild(elem.firstChild);
+           }
+            var xmlhttp = new XMLHttpRequest();
+            var filmname=document.getElementById("query").value;
+            
+            xmlhttp.onreadystatechange=function()
+        	{
+        		if (xmlhttp.readyState==4 && xmlhttp.status==200)
+        		{
+        			var arr=eval(xmlhttp.responseText);
+                    for(var a in arr){
+                        var li = document.createElement('li');
+                        li.innerHTML="<a href=''>"+arr[a]+"</a>";
+                        document.getElementById("filmreport").appendChild(li);
+                    }
+        		}
+        	}
+            
+            var arr=xmlhttp.open("GET","http://localhost:8080/MovieTicketPrice/Film/search?type=films&name="+filmname,true);
+            xmlhttp.send();
+        }
+        window.onload = addfilm;
+    </script>
+</head>
+<body >
+<!--主体容器-->
+<div id="container">
+    <!--顶部-->
+    <div id="head">
+        <div id="titlename"></div>
+    </div>
+    <!--搜索-->
+    <div id="searchbox" class="searchbox">
+        <form action="" id="sf" name="sf">
+            <input type="text" class="sec-input" name="query" id="query"  maxlength="20" >
+            <input type="button"  id="stb"   value="搜索" onclick="searchfilm()" >
+        </form>
+    </div>
+    <!--展示-->
+    <div id="showbox">
+        <ul id="filmreport">
+
+        </ul>
+    </div>
+    <!--底部-->
+    <div id="foot">
+    </div>
+</div>
+</body>
+</html>
